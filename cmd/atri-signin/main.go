@@ -9,6 +9,7 @@ import (
 	"math/big"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -87,7 +88,7 @@ func run() int {
 		WorkerTimeout:  *workerTimeout,
 	}, func(result runner.Result) {
 		completed++
-		fmt.Printf("[%d/%d] %s -> %s: %s\n", completed, len(loaded), result.Email, result.Status, result.Message)
+		fmt.Printf("[%d/%d] %s -> %s: %s\n", completed, len(loaded), result.Email, result.Status, resultDetail(result))
 	})
 
 	if len(results) > 0 {
@@ -108,6 +109,25 @@ func run() int {
 		return 2
 	}
 	return 0
+}
+
+func resultDetail(result runner.Result) string {
+	if result.Amount == "" {
+		return result.Message
+	}
+	detail := result.Message + " (reward ¥" + formatMoney(result.Amount)
+	if result.Balance != "" {
+		detail += ", balance ¥" + formatMoney(result.Balance)
+	}
+	return detail + ")"
+}
+
+func formatMoney(value string) string {
+	number, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return value
+	}
+	return strconv.FormatFloat(number, 'f', 2, 64)
 }
 
 func shuffle(items []accounts.Account) {

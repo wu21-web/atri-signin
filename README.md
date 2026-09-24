@@ -34,7 +34,7 @@ Useful flags:
 
 `-max-signin-count` limits how many account subprocesses run at once. The queue continues until every row has been processed.
 
-Each completed run writes `results/signin-YYYYMMDD-HHMMSS.csv` with the timestamp, email, status, message, and duration. The most common successful statuses are `success` and `already_signed`.
+Each completed run writes `results/signin-YYYYMMDD-HHMMSS.csv` with the timestamp, email, status, message, reward amount, balance, and duration. The most common successful statuses are `success` and `already_signed`.
 
 ## Process model
 

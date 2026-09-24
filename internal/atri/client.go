@@ -32,6 +32,8 @@ type Result struct {
 	Email      string `json:"email"`
 	Status     string `json:"status"`
 	Message    string `json:"message"`
+	Amount     string `json:"amount,omitempty"`
+	Balance    string `json:"balance,omitempty"`
 	DurationMS int64  `json:"duration_ms"`
 }
 
@@ -42,9 +44,18 @@ type Client struct {
 }
 
 type apiResponse struct {
-	Code    any    `json:"code"`
-	Msg     string `json:"msg"`
-	Message string `json:"message"`
+	Code    any             `json:"code"`
+	Msg     string          `json:"msg"`
+	Message string          `json:"message"`
+	Data    json.RawMessage `json:"data"`
+}
+
+type checkinData struct {
+	Amount  json.RawMessage `json:"amount"`
+	Balance json.RawMessage `json:"balance"`
+	Checkin struct {
+		TodayAmount json.RawMessage `json:"today_amount"`
+	} `json:"checkin"`
 }
 
 func (r apiResponse) code() int {
@@ -155,12 +166,53 @@ func (c *Client) CheckIn(ctx context.Context, email, password string) Result {
 		return finish(networkStatus(err), networkMessage(err))
 	}
 	if checkin.code() == http.StatusOK {
-		return finish(StatusSuccess, nonEmpty(checkin.text(), "check-in completed"))
+		amount, balance := parseCheckinData(checkin.Data)
+		result := finish(StatusSuccess, nonEmpty(checkin.text(), "check-in completed"))
+		result.Amount = amount
+		result.Balance = balance
+		return result
 	}
 	if isAlreadySignedMessage(checkin.text()) {
-		return finish(StatusAlreadySigned, nonEmpty(checkin.text(), "already checked in"))
+		amount, balance := parseCheckinData(checkin.Data)
+		result := finish(StatusAlreadySigned, nonEmpty(checkin.text(), "already checked in"))
+		result.Amount = amount
+		result.Balance = balance
+		return result
 	}
 	return finish(StatusFailed, nonEmpty(checkin.text(), "check-in rejected"))
+}
+
+func parseCheckinData(raw json.RawMessage) (string, string) {
+	if len(raw) == 0 {
+		return "", ""
+	}
+	var data checkinData
+	if err := json.Unmarshal(raw, &data); err != nil {
+		return "", ""
+	}
+	amount := moneyValue(data.Amount)
+	balance := moneyValue(data.Balance)
+	if amount == "" {
+		amount = moneyValue(data.Checkin.TodayAmount)
+	}
+	return amount, balance
+}
+
+func moneyValue(raw json.RawMessage) string {
+	if len(raw) == 0 || string(raw) == "null" {
+		return ""
+	}
+	var text string
+	if err := json.Unmarshal(raw, &text); err == nil {
+		return strings.TrimSpace(text)
+	}
+	var number json.Number
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	decoder.UseNumber()
+	if err := decoder.Decode(&number); err == nil {
+		return number.String()
+	}
+	return strings.Trim(strings.TrimSpace(string(raw)), `"`)
 }
 
 func (c *Client) postJSON(ctx context.Context, path string, params map[string]any, referer string) (apiResponse, error) {

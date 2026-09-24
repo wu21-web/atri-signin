@@ -37,7 +37,7 @@ func Write(dir string, results []runner.Result) (string, error) {
 	defer file.Close()
 
 	writer := csv.NewWriter(file)
-	if err := writer.Write([]string{"timestamp", "email", "status", "message", "duration_ms"}); err != nil {
+	if err := writer.Write([]string{"timestamp", "email", "status", "message", "amount", "balance", "duration_ms"}); err != nil {
 		return "", err
 	}
 	sorted := append([]runner.Result(nil), results...)
@@ -50,6 +50,8 @@ func Write(dir string, results []runner.Result) (string, error) {
 			result.Email,
 			result.Status,
 			result.Message,
+			result.Amount,
+			result.Balance,
 			strconv.FormatInt(result.DurationMS, 10),
 		}
 		if err := writer.Write(row); err != nil {
