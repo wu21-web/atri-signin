@@ -1,5 +1,7 @@
 # Atri Sign-in
 
+[![CI](https://github.com/wu21-web/atri-signin/actions/workflows/build.yml/badge.svg)](https://github.com/wu21-web/atri-signin/actions/workflows/build.yml)
+
 A one-shot Go CLI that logs into each account listed in a CSV and claims the daily check-in on Atri Shop.
 
 ## Input
