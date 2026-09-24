@@ -19,20 +19,20 @@ There is no header. Each row must contain exactly two fields. Passwords containi
 
 ```sh
 go build -o atri-signin ./cmd/atri-signin
-./atri-signin
+./atri-signin --accounts accounts.csv --max-signin-count 2
 ```
 
 Useful flags:
 
 ```text
--accounts accounts.csv
--max-signin-count 2
--results results
--timeout 25s
--worker-timeout 2m
+--accounts accounts.csv
+--max-signin-count 2
+--results results
+--timeout 25s
+--worker-timeout 2m
 ```
 
-`-max-signin-count` limits how many account subprocesses run at once. The queue continues until every row has been processed.
+`--max-signin-count` limits how many account subprocesses run at once. The queue continues until every row has been processed.
 
 Each completed run writes `results/signin-YYYYMMDD-HHMMSS.csv` with the timestamp, email, status, message, reward amount, balance, and duration. The most common successful statuses are `success` and `already_signed`.
 
