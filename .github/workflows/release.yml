@@ -43,26 +43,13 @@ jobs:
           GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: "0"
         run: |
-          mkdir -p package
-          binary="atri-signin"
-          if [ "$GOOS" = "windows" ]; then
-            binary="atri-signin.exe"
-          fi
-          go build -trimpath -ldflags="-s -w" -o "package/${binary}" ./cmd/atri-signin
-
-      - name: Package
-        env:
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
-        run: |
           mkdir -p dist
           version="${GITHUB_REF_NAME//\//-}"
-          archive="atri-signin-${version}-${GOOS}-${GOARCH}"
+          extension=""
           if [ "$GOOS" = "windows" ]; then
-            (cd package && zip -q "../dist/${archive}.zip" atri-signin.exe)
-          else
-            (cd package && tar -czf "../dist/${archive}.tar.gz" atri-signin)
+            extension=".exe"
           fi
+          go build -trimpath -ldflags="-s -w" -o "dist/atri-signin-${version}-${GOOS}-${GOARCH}${extension}" ./cmd/atri-signin
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -85,7 +72,7 @@ jobs:
       - name: Checksums
         run: |
           cd release-assets
-          sha256sum *.tar.gz *.zip > SHA256SUMS
+          sha256sum atri-signin-* > SHA256SUMS
 
       - name: Publish release
         env:
