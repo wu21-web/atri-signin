@@ -17,6 +17,7 @@ import (
 	"github.com/wu21-web/atri-signin/internal/atri"
 	"github.com/wu21-web/atri-signin/internal/report"
 	"github.com/wu21-web/atri-signin/internal/runner"
+	"github.com/wu21-web/atri-signin/internal/version"
 )
 
 func main() {
@@ -31,14 +32,18 @@ func run() int {
 	resultsDir := fs.String("results", "results", "directory for the results CSV")
 	requestTimeout := fs.Duration("timeout", 25*time.Second, "timeout for each HTTP request")
 	workerTimeout := fs.Duration("worker-timeout", 2*time.Minute, "timeout for one account subprocess")
+	versionShort := fs.Bool("v", false, "print version and exit")
+	versionLong := fs.Bool("version", false, "print version and exit")
 	worker := fs.Bool("worker", false, "internal single-account worker mode")
 	fs.Usage = func() {
 		fmt.Fprintf(fs.Output(), "Usage: atri-signin [options]\n\nOptions:\n")
+		fmt.Fprintf(fs.Output(), "  -v, --version\n")
+		fmt.Fprintf(fs.Output(), "        print version and exit\n")
 		fs.VisitAll(func(f *flag.Flag) {
-			if f.Name == "worker" {
+			if f.Name == "worker" || f.Name == "v" || f.Name == "version" {
 				return
 			}
-			fmt.Fprintf(fs.Output(), "  -%s %s\n", f.Name, f.Value)
+			fmt.Fprintf(fs.Output(), "  --%s %s\n", f.Name, f.Value)
 			fmt.Fprintf(fs.Output(), "        %s\n", f.Usage)
 		})
 	}
@@ -47,6 +52,11 @@ func run() int {
 			return 0
 		}
 		return 1
+	}
+
+	if *versionShort || *versionLong {
+		fmt.Println(version.Version)
+		return 0
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
