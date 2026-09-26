@@ -4,22 +4,34 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - "**.md"
+      - ".github/CODEOWNERS"
+      - ".gitignore"
+      - "/LICENSE"
   pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
-  id-token: write
-  attestations: write
-  artifact-metadata: write
 
 concurrency:
-  group: ci-build-${{ github.ref }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  test:
+    name: Test
+    uses: ./.github/workflows/test.yml
+
   build:
     name: Build
+    needs: test
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
