@@ -1,5 +1,6 @@
 /atri-signin
 /bin/
-/accounts.csv
+**/accounts.csv
 /results/
 *.log
+.DS_Store
