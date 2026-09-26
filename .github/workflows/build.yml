@@ -21,8 +21,8 @@ concurrency:
 
 jobs:
   test:
-    name: Test
-    uses: ./.github/workflows/test.yml
+    name: Build Pretest
+    uses: $/.github/workflows/test.yml
 
   build:
     name: Build
