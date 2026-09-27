@@ -1,1 +1,5 @@
 *   @wu21-web
+
+# Dependabot dependency updates do NOT need a code-owner review.
+/go.mod
+/go.sum
