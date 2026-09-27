@@ -39,6 +39,7 @@ type Result struct {
 
 type Client struct {
 	baseURL   string
+	basePath  string
 	userAgent string
 	http      *http.Client
 }
@@ -85,12 +86,17 @@ func NewClient(baseURL string, timeout time.Duration) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	u, err := url.Parse(baseURL)
+	if err != nil {
+		return nil, err
+	}
 	jar, err := cookiejar.New(nil)
 	if err != nil {
 		return nil, err
 	}
 	return &Client{
-		baseURL:   strings.TrimRight(baseURL, "/"),
+		baseURL:   baseURL,
+		basePath:  strings.TrimRight(u.Path, "/"),
 		userAgent: DefaultUserAgent,
 		http: &http.Client{
 			Jar:     jar,
@@ -114,8 +120,14 @@ func NormalizeBaseURL(baseURL string) (string, error) {
 	if u.Scheme != "https" && u.Scheme != "http" {
 		return "", fmt.Errorf("unsupported base URL scheme %q", u.Scheme)
 	}
-	if u.Host == "" {
-		return "", fmt.Errorf("base URL must include a host")
+	if u.Hostname() == "" {
+		return "", fmt.Errorf("base URL must include a hostname")
+	}
+	if port := u.Port(); port != "" {
+		number, err := strconv.Atoi(port)
+		if err != nil || number < 1 || number > 65535 {
+			return "", fmt.Errorf("base URL contains an invalid port")
+		}
 	}
 	if u.RawQuery != "" || u.Fragment != "" {
 		return "", fmt.Errorf("base URL must not include a query or fragment")
@@ -172,7 +184,7 @@ func (c *Client) CheckIn(ctx context.Context, email, password string) Result {
 	}
 	defer center.Body.Close()
 	_, _ = io.Copy(io.Discard, io.LimitReader(center.Body, 1<<20))
-	if center.Request == nil || center.Request.URL.Path != "/user/center" {
+	if center.Request == nil || center.Request.URL.Path != c.centerPath() {
 		return finish(StatusFailed, "login session was not established")
 	}
 
@@ -199,6 +211,10 @@ func (c *Client) CheckIn(ctx context.Context, email, password string) Result {
 		return result
 	}
 	return finish(StatusFailed, nonEmpty(checkin.text(), "check-in rejected"))
+}
+
+func (c *Client) centerPath() string {
+	return c.basePath + "/user/center"
 }
 
 func parseCheckinData(raw json.RawMessage) (string, string) {
