@@ -32,7 +32,9 @@ func run() int {
 	resultsDir := fs.String("results", "results", "directory for the results CSV")
 	requestTimeout := fs.Duration("timeout", 25*time.Second, "timeout for each HTTP request")
 	workerTimeout := fs.Duration("worker-timeout", 2*time.Minute, "timeout for one account subprocess")
-	atriHost := fs.String("atri-host", "shop.atrishop.work", "AtriShop hostname or base URL")
+	atriHost := "shop.atrishop.work"
+	fs.StringVar(&atriHost, "atri-host", atriHost, "AtriShop hostname or base URL")
+	fs.StringVar(&atriHost, "H", atriHost, "short for --atri-host")
 	versionShort := fs.Bool("v", false, "print version and exit")
 	versionLong := fs.Bool("version", false, "print version and exit")
 	worker := fs.Bool("worker", false, "internal single-account worker mode")
@@ -40,8 +42,10 @@ func run() int {
 		fmt.Fprintf(fs.Output(), "Usage: atri-signin [options]\n\nOptions:\n")
 		fmt.Fprintf(fs.Output(), "  -v, --version\n")
 		fmt.Fprintf(fs.Output(), "        print version and exit\n")
+		fmt.Fprintf(fs.Output(), "  -H, --atri-host <host>\n")
+		fmt.Fprintf(fs.Output(), "        AtriShop hostname or base URL (default \"shop.atrishop.work\")\n")
 		fs.VisitAll(func(f *flag.Flag) {
-			if f.Name == "worker" || f.Name == "v" || f.Name == "version" {
+			if f.Name == "worker" || f.Name == "v" || f.Name == "version" || f.Name == "H" || f.Name == "atri-host" {
 				return
 			}
 			fmt.Fprintf(fs.Output(), "  --%s %s\n", f.Name, f.Value)
@@ -74,7 +78,7 @@ func run() int {
 		fmt.Fprintln(os.Stderr, "max-signin-count must be at least 1")
 		return 1
 	}
-	baseURL, err := atri.NormalizeBaseURL(*atriHost)
+	baseURL, err := atri.NormalizeBaseURL(atriHost)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "atri-host:", err)
 		return 1
