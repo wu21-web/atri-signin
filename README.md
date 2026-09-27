@@ -17,6 +17,7 @@ There is no header. Each row must contain exactly two fields. Passwords containi
 
 `accounts.csv` is gitignored. Passwords are never written to stdout or the results file.
 
+You can reference example inputs and outputs in the `examples/` directory.
 ## Run
 
 ```sh
