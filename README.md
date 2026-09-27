@@ -32,10 +32,13 @@ Useful flags:
 --results results
 --timeout 25s
 --worker-timeout 2m
+--atri-host shop.atrishop.work
 --version
 ```
 
 `--max-signin-count` limits how many account subprocesses run at once. The queue continues until every row has been processed.
+
+`--atri-host` overrides the target host. It accepts a hostname, such as `shop.atrishop.work`, or a full base URL, such as `https://shop.atrishop.work`. A plain hostname defaults to HTTPS.
 
 Each completed run writes `results/signin-YYYYMMDD-HHMMSS.csv` with the timestamp, email, status, message, reward amount, balance, and duration. The most common successful statuses are `success` and `already_signed`.
 

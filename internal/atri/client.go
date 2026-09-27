@@ -81,15 +81,9 @@ func (r apiResponse) text() string {
 }
 
 func NewClient(baseURL string, timeout time.Duration) (*Client, error) {
-	if baseURL == "" {
-		baseURL = DefaultBaseURL
-	}
-	u, err := url.Parse(baseURL)
+	baseURL, err := NormalizeBaseURL(baseURL)
 	if err != nil {
 		return nil, err
-	}
-	if u.Scheme != "https" && u.Scheme != "http" {
-		return nil, fmt.Errorf("unsupported base URL scheme %q", u.Scheme)
 	}
 	jar, err := cookiejar.New(nil)
 	if err != nil {
@@ -103,6 +97,31 @@ func NewClient(baseURL string, timeout time.Duration) (*Client, error) {
 			Timeout: timeout,
 		},
 	}, nil
+}
+
+func NormalizeBaseURL(baseURL string) (string, error) {
+	baseURL = strings.TrimSpace(baseURL)
+	if baseURL == "" {
+		return DefaultBaseURL, nil
+	}
+	if !strings.Contains(baseURL, "://") {
+		baseURL = "https://" + baseURL
+	}
+	u, err := url.Parse(baseURL)
+	if err != nil {
+		return "", err
+	}
+	if u.Scheme != "https" && u.Scheme != "http" {
+		return "", fmt.Errorf("unsupported base URL scheme %q", u.Scheme)
+	}
+	if u.Host == "" {
+		return "", fmt.Errorf("base URL must include a host")
+	}
+	if u.RawQuery != "" || u.Fragment != "" {
+		return "", fmt.Errorf("base URL must not include a query or fragment")
+	}
+	u.Path = strings.TrimRight(u.Path, "/")
+	return u.String(), nil
 }
 
 func (c *Client) CheckIn(ctx context.Context, email, password string) Result {
