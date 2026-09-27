@@ -40,6 +40,7 @@ type Result struct {
 type Client struct {
 	baseURL   string
 	basePath  string
+	origin    string
 	userAgent string
 	http      *http.Client
 }
@@ -97,6 +98,7 @@ func NewClient(baseURL string, timeout time.Duration) (*Client, error) {
 	return &Client{
 		baseURL:   baseURL,
 		basePath:  strings.TrimRight(u.Path, "/"),
+		origin:    u.Scheme + "://" + u.Host,
 		userAgent: DefaultUserAgent,
 		http: &http.Client{
 			Jar:     jar,
@@ -129,7 +131,7 @@ func NormalizeBaseURL(baseURL string) (string, error) {
 			return "", fmt.Errorf("base URL contains an invalid port")
 		}
 	}
-	if u.RawQuery != "" || u.Fragment != "" {
+	if u.RawQuery != "" || u.ForceQuery || u.Fragment != "" {
 		return "", fmt.Errorf("base URL must not include a query or fragment")
 	}
 	u.Path = strings.TrimRight(u.Path, "/")
@@ -353,7 +355,7 @@ func (c *Client) apiHeaders(secret, sig, referer string) http.Header {
 	headers.Set("Accept", "*/*")
 	headers.Set("Accept-Language", "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7")
 	headers.Set("Content-Type", "text/plain")
-	headers.Set("Origin", c.baseURL)
+	headers.Set("Origin", c.origin)
 	headers.Set("Priority", "u=1, i")
 	headers.Set("Referer", referer)
 	headers.Set("Sec-Ch-Ua", `"Chromium";v="153", "Not:A-Brand";v="24", "Google Chrome";v="153"`)

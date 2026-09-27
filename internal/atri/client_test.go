@@ -47,6 +47,7 @@ func TestNormalizeBaseURL(t *testing.T) {
 		{name: "invalid port", input: "https://example.com:70000", wantErr: true},
 		{name: "non-numeric port", input: "https://example.com:http", wantErr: true},
 		{name: "query", input: "https://example.com/?token=1", wantErr: true},
+		{name: "bare query", input: "https://example.com?", wantErr: true},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -82,5 +83,15 @@ func TestClientCenterPathIncludesBasePath(t *testing.T) {
 	}
 	if got := prefixed.centerPath(); got != "/shop/user/center" {
 		t.Fatalf("prefixed center path: want %q, got %q", "/shop/user/center", got)
+	}
+}
+
+func TestClientOriginStripsPath(t *testing.T) {
+	client, err := NewClient("https://example.com:8443/shop/", time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := client.origin; got != "https://example.com:8443" {
+		t.Fatalf("origin: want %q, got %q", "https://example.com:8443", got)
 	}
 }
