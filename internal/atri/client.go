@@ -39,6 +39,8 @@ type Result struct {
 
 type Client struct {
 	baseURL   string
+	basePath  string
+	origin    string
 	userAgent string
 	http      *http.Client
 }
@@ -81,28 +83,59 @@ func (r apiResponse) text() string {
 }
 
 func NewClient(baseURL string, timeout time.Duration) (*Client, error) {
-	if baseURL == "" {
-		baseURL = DefaultBaseURL
+	baseURL, err := NormalizeBaseURL(baseURL)
+	if err != nil {
+		return nil, err
 	}
 	u, err := url.Parse(baseURL)
 	if err != nil {
 		return nil, err
-	}
-	if u.Scheme != "https" && u.Scheme != "http" {
-		return nil, fmt.Errorf("unsupported base URL scheme %q", u.Scheme)
 	}
 	jar, err := cookiejar.New(nil)
 	if err != nil {
 		return nil, err
 	}
 	return &Client{
-		baseURL:   strings.TrimRight(baseURL, "/"),
+		baseURL:   baseURL,
+		basePath:  strings.TrimRight(u.Path, "/"),
+		origin:    u.Scheme + "://" + u.Host,
 		userAgent: DefaultUserAgent,
 		http: &http.Client{
 			Jar:     jar,
 			Timeout: timeout,
 		},
 	}, nil
+}
+
+func NormalizeBaseURL(baseURL string) (string, error) {
+	baseURL = strings.TrimSpace(baseURL)
+	if baseURL == "" {
+		return DefaultBaseURL, nil
+	}
+	if !strings.Contains(baseURL, "://") {
+		baseURL = "https://" + baseURL
+	}
+	u, err := url.Parse(baseURL)
+	if err != nil {
+		return "", err
+	}
+	if u.Scheme != "https" && u.Scheme != "http" {
+		return "", fmt.Errorf("unsupported base URL scheme %q", u.Scheme)
+	}
+	if u.Hostname() == "" {
+		return "", fmt.Errorf("base URL must include a hostname")
+	}
+	if port := u.Port(); port != "" {
+		number, err := strconv.Atoi(port)
+		if err != nil || number < 1 || number > 65535 {
+			return "", fmt.Errorf("base URL contains an invalid port")
+		}
+	}
+	if u.RawQuery != "" || u.ForceQuery || u.Fragment != "" {
+		return "", fmt.Errorf("base URL must not include a query or fragment")
+	}
+	u.Path = strings.TrimRight(u.Path, "/")
+	return u.String(), nil
 }
 
 func (c *Client) CheckIn(ctx context.Context, email, password string) Result {
@@ -153,7 +186,7 @@ func (c *Client) CheckIn(ctx context.Context, email, password string) Result {
 	}
 	defer center.Body.Close()
 	_, _ = io.Copy(io.Discard, io.LimitReader(center.Body, 1<<20))
-	if center.Request == nil || center.Request.URL.Path != "/user/center" {
+	if center.Request == nil || center.Request.URL.Path != c.centerPath() {
 		return finish(StatusFailed, "login session was not established")
 	}
 
@@ -180,6 +213,10 @@ func (c *Client) CheckIn(ctx context.Context, email, password string) Result {
 		return result
 	}
 	return finish(StatusFailed, nonEmpty(checkin.text(), "check-in rejected"))
+}
+
+func (c *Client) centerPath() string {
+	return c.basePath + "/user/center"
 }
 
 func parseCheckinData(raw json.RawMessage) (string, string) {
@@ -318,7 +355,7 @@ func (c *Client) apiHeaders(secret, sig, referer string) http.Header {
 	headers.Set("Accept", "*/*")
 	headers.Set("Accept-Language", "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7")
 	headers.Set("Content-Type", "text/plain")
-	headers.Set("Origin", c.baseURL)
+	headers.Set("Origin", c.origin)
 	headers.Set("Priority", "u=1, i")
 	headers.Set("Referer", referer)
 	headers.Set("Sec-Ch-Ua", `"Chromium";v="153", "Not:A-Brand";v="24", "Google Chrome";v="153"`)
