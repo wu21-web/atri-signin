@@ -69,7 +69,7 @@ jobs:
           retention-days: 3
 
   publish:
-    if: false         # Note that I disabled the publish job for now. I'd rather publish release notes by myself.
+    if: false # Note that I disabled the publish job for now. I'd rather publish release notes by myself.
     name: Publish
     needs: build
     runs-on: ubuntu-latest
