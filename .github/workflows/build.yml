@@ -20,8 +20,9 @@ concurrency:
 
 jobs:
   test:
-    name: Build Pretest
     uses: $/.github/workflows/test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   build:
     name: Build
