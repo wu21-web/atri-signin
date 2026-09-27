@@ -1,0 +1,13 @@
+timestamp,email,status,message,amount,balance,duration_ms
+1970-01-01T00:00:00+00:00,one@example.com,success,签到成功,0.25,0.53,7655
+1970-01-01T00:00:00+00:00,two@example.com,success,签到成功,0.10,0.28,6087
+1970-01-01T00:00:00+00:00,three@example.com,success,签到成功,0.05,0.17,8612
+1970-01-01T00:00:00+00:00,four@example.com,success,签到成功,0.03,0.11,8377
+1970-01-01T00:00:00+00:00,five@example.com,success,签到成功,0.15,0.44,8233
+1970-01-01T00:00:00+00:00,six@example.com,success,签到成功,0.05,0.35,9419
+1970-01-01T00:00:00+00:00,seven@example.com,success,签到成功,0.02,0.14,8692
+1970-01-01T00:00:00+00:00,eight@example.com,success,签到成功,0.11,0.18,10310
+1970-01-01T00:00:00+00:00,nine@example.com,success,签到成功,0.02,0.10,9054
+1970-01-01T00:00:00+00:00,ten@example.com,success,签到成功,0.15,8.76,8127
+1970-01-01T00:00:00+00:00,eleven@example.com,success,签到成功,0.07,0.25,6766
+1970-01-01T00:00:00+00:00,twelve@example.com,success,签到成功,0.29,0.59,9774
