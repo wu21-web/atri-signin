@@ -1,0 +1,67 @@
+name: AtriShop Signin
+
+on:
+  schedule:
+    - cron: "17 9 * * *"
+
+permissions:
+  contents: read
+
+env:
+  MANUAL_CHECKOUT: true
+  TAG_VERSION: "v0.4.0"
+
+jobs:
+  checkin:
+    runs-on: ubuntu-slim # Minimize cost
+    steps:
+      - uses: actions/checkout@v7
+        if: ${{ env.MANUAL_CHECKOUT == 'true' }}
+        with:
+          repository: "wu21-web/atri-signin"
+          ref: ${{ env.TAG_VERSION }}
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+
+      - name: Install atri-signin
+        if: ${{ env.MANUAL_CHECKOUT != 'true' }}
+        env:
+          GOBIN: ${{ github.workspace }}
+        run: go install github.com/wu21-web/atri-signin/cmd/atri-signin@${{ env.TAG_VERSION }}
+
+      - name: Build
+        if: ${{ env.MANUAL_CHECKOUT == 'true' }}
+        run: |
+          go build -o atri-signin ./cmd/atri-signin/ -ldflags '-X github.com/wu21-web/atri-signin/internal/version.Version=${{ env.TAG_VERSION }}'
+          ./atri-signin --version
+
+      - name: Store Pass
+        env:
+          ACCOUNTS_CSV: ${{ secrets.ATRIPASS_CSV_CONTENT }}
+        run: printf '%s\n' "$ACCOUNTS_CSV" > ./accounts.csv
+
+      - name: Run command
+        run: |
+          if [ -x ./atri-signin ]; then
+            bin=./atri-signin
+          elif command -v atri-signin > /dev/null; then
+            bin=atri-signin
+          else
+            echo "atri-signin not found" >&2
+            exit 0
+          fi
+          "$bin" --accounts accounts.csv --max-signin-count 2 &> /dev/null
+
+      - name: Results Upload
+        if: false # Do not enable unless the repo is private.
+        uses: actions/upload-artifact@v7
+        with:
+          if-no-files-found: "error"
+          retention-days: 1
+          path: "./results/signin-*.csv"
+
+      - name: Post Store Pass & Run Command
+        if: always()
+        run: rm -f ./accounts.csv && rm -rf ./results
