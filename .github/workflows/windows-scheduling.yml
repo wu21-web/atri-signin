@@ -1,0 +1,34 @@
+name: Windows scheduling
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "examples/integrations/cron-job.ps1"
+      - "tests/windows-scheduling.ps1"
+      - ".github/workflows/windows-scheduling.yml"
+  pull_request:
+    paths:
+      - "examples/integrations/cron-job.ps1"
+      - "tests/windows-scheduling.ps1"
+      - ".github/workflows/windows-scheduling.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        shell: [powershell, pwsh]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Test Windows Task Scheduler integration
+        shell: ${{ matrix.shell }}
+        run: ./tests/windows-scheduling.ps1
