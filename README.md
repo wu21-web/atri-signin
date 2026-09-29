@@ -85,9 +85,20 @@ Manage the task in Task Scheduler (`taskschd.msc`) or PowerShell:
 ```powershell
 Get-ScheduledTaskInfo -TaskName 'AtriSignIn' -TaskPath '\'
 Start-ScheduledTask -TaskName 'AtriSignIn' -TaskPath '\' # Run sign-in now.
-Unregister-ScheduledTask -TaskName 'AtriSignIn' -TaskPath '\' # Remove the schedule.
 ```
+
+To remove the schedule, run [`examples/integrations/remove-cron-job.ps1`](examples/integrations/remove-cron-job.ps1):
+
+```powershell
+.\examples\integrations\remove-cron-job.ps1 -WhatIf # Preview removal of AtriSignIn.
+.\examples\integrations\remove-cron-job.ps1 # Confirm removal of AtriSignIn.
+
+# Use the same custom name supplied to cron-job.ps1 when registering the task.
+.\examples\integrations\remove-cron-job.ps1 -TaskName 'AtriSignIn-Personal'
+```
+
+The removal script matches the task name literally in the Task Scheduler root folder and prompts for confirmation. Use `-Confirm:$false` for unattended removal. If the task is already absent, the script reports that and exits successfully. It works even if the executable or CSV has been moved or removed. Removal cancels future scheduled starts; an already-running sign-in can finish. The executable, accounts CSV, and result files are retained.
 
 After the CLI finishes, `LastTaskResult` is `0` for success, `1` for setup/runtime errors, or `2` if any account failed; consult the result CSV for per-account outcomes. Windows can report other codes if the task has not run or could not start. These tasks execute the CLI directly, so stdout/stderr are not saved to a log. If local execution policy blocks the downloaded script, inspect it and use `Unblock-File` on that file, or run it once with `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\examples\integrations\cron-job.ps1` and the desired parameters. This does not change the machine's execution policy; organization policy may still prohibit it.
 
-To test the integration on Windows with Go installed, run `powershell.exe -NoProfile -File .\tests\windows-scheduling.ps1` or `pwsh.exe -NoProfile -File .\tests\windows-scheduling.ps1`. The test builds a harmless argument-capture executable, creates and runs a uniquely named temporary task, and removes its task and files afterward. It does not sign in or make requests to Atri Shop.
+To test the integration on Windows with Go installed, run `powershell.exe -NoProfile -File .\tests\windows-scheduling.ps1` or `pwsh.exe -NoProfile -File .\tests\windows-scheduling.ps1`. The test builds a harmless argument-capture executable, creates and runs uniquely named temporary tasks, verifies removal and preservation of unrelated tasks and files, and removes its remaining tasks and files afterward. It does not sign in or make requests to Atri Shop.
