@@ -2,6 +2,17 @@
 
 [![CI](https://github.com/wu21-web/atri-signin/actions/workflows/build.yml/badge.svg)](https://github.com/wu21-web/atri-signin/actions/workflows/build.yml)
 
+<details>
+<summary>中文特供版</summary>
+
+[AtriShop](https://shop.atrishop.work) 允许你每天签到，领取0~0.3毛钱。平均0.15
+<p>它的网易云季度会员价格是 ¥28.46，`28.46 / 0.15 > 90`，但是你可以开多个账号同时刷。刷够天数以后，就有用不完的会员了（只要你注册的号足够多）</p>
+<p>也可以用来刷别的会员，mc挂等</p>
+<p>用临时邮箱注册都可以，bing上搜一大堆</p>
+<p>想设置的看examples下的README教程，有github和atrishop账户就能刷</p>
+
+</details>
+
 A one-shot Go CLI that logs into each account listed in a CSV and claims the daily check-in on Atri Shop.
 
 ## Input
