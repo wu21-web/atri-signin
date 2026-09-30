@@ -26,7 +26,7 @@ Both scripts treat only the usual `no crontab for <user>` result as an empty cro
 
 Cron runs the entry as the current user while the machine is on and the cron daemon is running, in the system timezone. Unlike Task Scheduler and launchd it does not run starts that were missed while the machine was off or asleep, and a new run starts even if the previous one is still going. Standard output and errors are appended to the log file, so cron does not mail them. Installing the entry does not run sign-in immediately; the first run is the next occurrence of the chosen time.
 
-To remove the entry, run [`examples/integrations/remove-crontab-job.sh`](examples/integrations/remove-crontab-job.sh):
+To remove the entry, run [`integrations/remove-crontab-job.sh`](integrations/remove-crontab-job.sh):
 
 ```sh
 ./examples/integrations/remove-crontab-job.sh --dry-run # Preview removal of atri-signin.
@@ -42,7 +42,7 @@ To test the integration without touching your crontab, run `./tests/integrations
 
 ### Windows Task Scheduler
 
-Use [`examples/integrations/cron-job.ps1`](examples/integrations/cron-job.ps1) with Windows PowerShell 5.1 or PowerShell 7. Put `atri-signin.exe` on `PATH` (the name `atrisign.exe` is also accepted), or supply `-ExecutablePath`. For example, from the repository root:
+Use [`integrations/cron-job.ps1`](integrations/cron-job.ps1) with Windows PowerShell 5.1 or PowerShell 7. Put `atri-signin.exe` on `PATH` (the name `atrisign.exe` is also accepted), or supply `-ExecutablePath`. For example, from the repository root:
 
 ```powershell
 .\examples\integrations\cron-job.ps1 -AccountsPath 'C:\Atri Sign-in\accounts.csv' -At '09:17'
@@ -65,7 +65,7 @@ Get-ScheduledTaskInfo -TaskName 'AtriSignIn' -TaskPath '\'
 Start-ScheduledTask -TaskName 'AtriSignIn' -TaskPath '\' # Run sign-in now.
 ```
 
-To remove the schedule, run [`examples/integrations/remove-cron-job.ps1`](examples/integrations/remove-cron-job.ps1):
+To remove the schedule, run [`integrations/remove-cron-job.ps1`](integrations/remove-cron-job.ps1):
 
 ```powershell
 .\examples\integrations\remove-cron-job.ps1 -WhatIf # Preview removal of AtriSignIn.
@@ -83,7 +83,7 @@ To test the integration on Windows with Go installed, run `powershell.exe -NoPro
 
 ### macOS launchd
 
-Use [`examples/integrations/launchd-job.sh`](examples/integrations/launchd-job.sh), which registers a per-user LaunchAgent. Put `atri-signin` on `PATH`, or pass `--executable`. From the repository root:
+Use [`integrations/launchd-job.sh`](integrations/launchd-job.sh), which registers a per-user LaunchAgent. Put `atri-signin` on `PATH`, or pass `--executable`. From the repository root:
 
 ```sh
 ./examples/integrations/launchd-job.sh --accounts ~/atri-signin/accounts.csv
@@ -105,7 +105,7 @@ launchctl print gui/$UID/work.atrishop.atri-signin
 launchctl kickstart -k gui/$UID/work.atrishop.atri-signin # Run sign-in now.
 ```
 
-To remove the schedule, run [`examples/integrations/remove-launchd-job.sh`](examples/integrations/remove-launchd-job.sh):
+To remove the schedule, run [`integrations/remove-launchd-job.sh`](integrations/remove-launchd-job.sh):
 
 ```sh
 ./examples/integrations/remove-launchd-job.sh --dry-run # Preview removal of work.atrishop.atri-signin.
