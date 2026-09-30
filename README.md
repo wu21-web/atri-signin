@@ -102,3 +102,30 @@ The removal script matches the task name literally in the Task Scheduler root fo
 After the CLI finishes, `LastTaskResult` is `0` for success, `1` for setup/runtime errors, or `2` if any account failed; consult the result CSV for per-account outcomes. Windows can report other codes if the task has not run or could not start. These tasks execute the CLI directly, so stdout/stderr are not saved to a log. If local execution policy blocks the downloaded script, inspect it and use `Unblock-File` on that file, or run it once with `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\examples\integrations\cron-job.ps1` and the desired parameters. This does not change the machine's execution policy; organization policy may still prohibit it.
 
 To test the integration on Windows with Go installed, run `powershell.exe -NoProfile -File .\tests\windows-scheduling.ps1` or `pwsh.exe -NoProfile -File .\tests\windows-scheduling.ps1`. The test builds a harmless argument-capture executable, creates and runs uniquely named temporary tasks, verifies removal and preservation of unrelated tasks and files, and removes its remaining tasks and files afterward. It does not sign in or make requests to Atri Shop.
+
+### macOS launchd
+
+Use [`examples/integrations/launchd-job.sh`](examples/integrations/launchd-job.sh), which registers a per-user LaunchAgent. Put `atri-signin` on `PATH`, or pass `--executable`. From the repository root:
+
+```sh
+./examples/integrations/launchd-job.sh --accounts ~/atri-signin/accounts.csv
+
+# A downloaded release can keep its original filename.
+./examples/integrations/launchd-job.sh --accounts ./accounts.csv --executable ./atri-signin-darwin-arm64
+```
+
+Omit `--accounts` or `--at` to answer the prompts; the time prompt defaults to `09:17 AM` and accepts `HH:MM` or `H:MM AM/PM` in the system timezone. Relative paths are resolved when the job is installed, so an executable or CSV that moves afterwards needs another run with `--force`.
+
+The job is named `work.atrishop.atri-signin` and is installed as `~/Library/LaunchAgents/work.atrishop.atri-signin.plist`. Use `--label` for another name, `--dry-run` to print the plist without installing it, or `--force` to replace an existing job. Optional `--results`, `--max-signin-count`, and `--atri-host` map to the CLI flags; results default to a `results` directory next to the CSV. Protect the CSV as it contains account passwords; the plist stores only its path.
+
+The job runs as the current user and only while that user is logged on, including when the screen is locked. The Mac must be on and have network access; the script does not wake it from sleep, and launchd runs a missed start once the Mac wakes. Standard output and errors are appended to `~/Library/Logs/atri-signin.log` and `~/Library/Logs/atri-signin.error.log`. Installing the job does not run sign-in immediately; the first run is the next occurrence of the chosen time.
+
+Manage the job with `launchctl`:
+
+```sh
+launchctl print gui/$UID/work.atrishop.atri-signin
+launchctl kickstart -k gui/$UID/work.atrishop.atri-signin # Run sign-in now.
+
+launchctl bootout gui/$UID/work.atrishop.atri-signin
+rm ~/Library/LaunchAgents/work.atrishop.atri-signin.plist # Uninstall.
+```
