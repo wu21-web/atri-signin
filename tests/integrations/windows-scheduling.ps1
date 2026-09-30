@@ -7,8 +7,9 @@ param()
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 Import-Module ScheduledTasks
-$installer = Join-Path (Split-Path -Parent $PSScriptRoot) 'examples\integrations\cron-job.ps1'
-$remover = Join-Path (Split-Path -Parent $PSScriptRoot) 'examples\integrations\remove-cron-job.ps1'
+$repositoryRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$installer = Join-Path $repositoryRoot 'examples\integrations\cron-job.ps1'
+$remover = Join-Path $repositoryRoot 'examples\integrations\remove-cron-job.ps1'
 $taskName = 'AtriSignIn-Test-' + [guid]::NewGuid().ToString('N')
 $literalTaskName = $taskName + '[1]'
 $similarTaskName = $taskName + '1'
