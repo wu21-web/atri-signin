@@ -1,0 +1,91 @@
+name: Test Schedule Scripts
+
+on:
+  push:
+    branches: main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-macos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Lint shell scripts
+        run: |
+          shellcheck examples/integrations/launchd-job.sh \
+            examples/integrations/remove-launchd-job.sh \
+            tests/integrations/macos-scheduling.sh
+
+  test-macos:
+    runs-on: macos-latest
+    timeout-minutes: 10
+    needs: lint-macos
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: false
+
+      - name: Test the launchd installer
+        env:
+          ATRI_SIGNIN_TEST_BOOTSTRAP: "1"
+        run: ./tests/integrations/macos-scheduling.sh
+
+  lint-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Lint shell scripts
+        run: |
+          shellcheck examples/integrations/crontab-job.sh \
+            examples/integrations/remove-crontab-job.sh \
+            tests/integrations/linux-scheduling.sh
+
+  test-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: lint-linux
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: false
+
+      - name: Test the crontab integration
+        run: ./tests/integrations/linux-scheduling.sh
+
+  test-windows:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        shell: [powershell, pwsh]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: false
+
+      - name: Test with Windows PowerShell 5.1
+        if: matrix.shell == 'powershell'
+        shell: powershell
+        run: ./tests/integrations/windows-scheduling.ps1
+
+      - name: Test with PowerShell 7
+        if: matrix.shell == 'pwsh'
+        shell: pwsh
+        run: ./tests/integrations/windows-scheduling.ps1

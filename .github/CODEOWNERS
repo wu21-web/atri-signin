@@ -5,4 +5,4 @@
 
 example/integrations/*.ps1    @Qiyuanqiii
 examples/README.md    @Qiyuanqiii @wu21-web
-tests/*.ps1    @Qiyuanqiii
+tests/integrations/*.ps1    @Qiyuanqiii

@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-repository_root=$(cd "$(dirname "$0")/.." && pwd)
+repository_root=$(cd "$(dirname "$0")/../.." && pwd)
 installer=$repository_root/examples/integrations/crontab-job.sh
 remover=$repository_root/examples/integrations/remove-crontab-job.sh
 test_root=$(cd "$(mktemp -d "${TMPDIR:-/tmp}/atri-signin-linux.XXXXXX")" && pwd)
