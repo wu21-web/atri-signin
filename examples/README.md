@@ -4,8 +4,27 @@
 
 The two `.csv` files are example inputs and outputs of a single run.
 
+### Github Actions
+
+Github Actions is the recommended way to automate the sign-in action. It offers a good runtime environment, minimum cost and stable virtual environment.
+It does not require your local host machine to be always on. The sign-in action is performed on _Azure cloud_.
+
+Here is how you setup `atri-signin` via _Github Actions_:
+
+1. Create a private repository.
+2. Create a new file called: `signin.yml` under the `.github/workflows` directory.
+3. Copy the contents of [github_actions.yml](https://github.com/wu21-web/atri-signin/blob/main/examples/integrations/github_actions.yml) into `.github/workflows/signin.yml`.
+4. _Optionally, set `if: false` to `if: true` if you want to view the sign-in results._ **(DO THIS ONLY IN PRIVATE REPOSITORIES!)**
+5. **IMPORTANT: Change the cron time, 9:17 AM (UTC) by default to another random time.**
+6. Commit changes.
+7. Export your _AtriShop_ accounts and passwords into a `.csv` file like [accounts.example.csv](https://github.com/wu21-web/atri-signin/blob/main/examples/accounts.example.csv?plain=1).
+8. Create a _Actions Secret_ under `Secrets and variables > Actions > New repository secret` named `ATRIPASS_CSV_CONTENT`, with the prior `.csv` file as the secret.
+9. Done. You are all set.
+
+___
+
 > [!CAUTION]
-> The scripts are mostly written by AI. The author is not responsible for any damage to the operating system. **Use with caution.**
+> The setup scripts are mostly written by AI. The author is not responsible for any damage to the operating system. **Use with caution.**
 
 ### Linux crontab
 
