@@ -46,7 +46,13 @@ EOF
 absolute_path() {
   local directory
   directory=$(dirname "$1")
-  (cd "$directory" && printf '%s/%s\n' "$PWD" "$(basename "$1")")
+  if [[ -d $directory ]]; then
+    (cd "$directory" && printf '%s/%s\n' "$PWD" "$(basename "$1")")
+  elif [[ $1 == /* ]]; then
+    printf '%s\n' "$1"
+  else
+    printf '%s/%s\n' "$PWD" "$1"
+  fi
 }
 
 xml_escape() {
@@ -187,15 +193,18 @@ minute=$((10#${normalized##*:}))
 if [[ -z $results ]]; then
   results=$(dirname "$accounts")/results
 fi
+results=$(absolute_path "$results")
 if [[ -e $results && ! -d $results ]]; then
   die "the results path is not a directory: $results"
 fi
 
-if [[ ! $max_signin_count =~ ^[1-9][0-9]*$ ]]; then
-  die "invalid --max-signin-count: $max_signin_count"
+if [[ ! $max_signin_count =~ ^[1-9][0-9]*$ ]] || [[ ${#max_signin_count} -gt 10 ]] || ((10#$max_signin_count > 2147483647)); then
+  die "invalid --max-signin-count: $max_signin_count (must be between 1 and 2147483647)"
 fi
 
 working_directory=$(dirname "$accounts")
+plist_dir=$(absolute_path "$plist_dir")
+log_dir=$(absolute_path "$log_dir")
 stdout_path=$log_dir/atri-signin.log
 stderr_path=$log_dir/atri-signin.error.log
 plist_path=$plist_dir/$label.plist

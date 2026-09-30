@@ -152,6 +152,13 @@ assert_equal 5 "$(plist_value "$test_root/midnight.plist" StartCalendarInterval:
 expect_failure run_installer 'invalid time' --dry-run --at '24:00'
 expect_failure run_installer 'invalid time' --dry-run --at 'noon'
 
+(cd "$test_root" && run_installer --dry-run --results relative-results --log-dir relative-logs) >"$test_root/relative.plist"
+assert_equal "$test_root/relative-results" "$(plist_value "$test_root/relative.plist" ProgramArguments:4)" 'A relative --results path was not resolved.'
+assert_equal "$test_root/relative-logs/atri-signin.log" "$(plist_value "$test_root/relative.plist" StandardOutPath)" 'A relative --log-dir was not resolved.'
+
+expect_failure run_installer 'invalid --max-signin-count' --dry-run --max-signin-count 2147483648
+expect_failure run_installer 'invalid --max-signin-count' --dry-run --max-signin-count 99999999999999999999
+
 if ! (launchctl print "gui/$UID" >/dev/null 2>&1 && mkdir -p "$launch_agents" && touch "$launch_agents/.atri-signin-test.$$"); then
   printf 'note: launchd is unavailable or %s is not writable; skipping the live install.\n' "$launch_agents"
   printf 'Passed %d assertions.\n' "$assertions"
@@ -210,7 +217,7 @@ if [[ ${ATRI_SIGNIN_TEST_BOOTSTRAP:-} == 1 ]]; then
   if [[ -f "$(dirname "$accounts")/results/args.txt" ]]; then
     assert_equal "$(printf '%s\n' "${arguments[@]:1}")" "$(cat "$(dirname "$accounts")/results/args.txt")" 'launchd ran the job with the wrong arguments.'
   else
-    printf 'note: launchd did not start the job within 30s; skipping the live run assertion.\n'
+    fail 'launchd did not start the job within 30s.'
   fi
 else
   printf 'note: skipping the live launchctl run.\n'
