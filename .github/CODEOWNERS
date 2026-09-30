@@ -2,4 +2,6 @@
 
 # Dependabot dependency updates do NOT need a code-owner review.
 /go.mod
-/go.sum
+
+example/integrations/*.ps1    @Qiyuanqiii
+examples/README.md    @Qiyuanqiii @wu21-web
