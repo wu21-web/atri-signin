@@ -1,0 +1,38 @@
+name: Linux scheduling
+
+on:
+  push:
+    branches: [main, shell]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Lint shell scripts
+        run: |
+          shellcheck examples/integrations/crontab-job.sh \
+            examples/integrations/remove-crontab-job.sh \
+            tests/linux-scheduling.sh
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: lint
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: false
+
+      - name: Test the crontab integration
+        run: ./tests/linux-scheduling.sh
