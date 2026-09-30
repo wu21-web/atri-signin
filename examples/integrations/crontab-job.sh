@@ -18,7 +18,7 @@ die() {
   exit 1
 }
 
-lock_dir=${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/atri-signin-crontab.lock
+lock_dir=${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/atri-signin-crontab-$(id -u).lock
 
 release_lock() {
   rmdir "$lock_dir" 2>/dev/null || true
