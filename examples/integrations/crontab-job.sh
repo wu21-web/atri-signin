@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -euo pipefail
 
@@ -89,6 +89,9 @@ absolute_path() {
 
 shell_quote() {
   local value=$1
+  if [[ $value == *$'\n'* || $value == *$'\r'* ]]; then
+    die 'paths and argument values must not contain newline characters'
+  fi
   value=${value//\'/\'\\\'\'}
   printf "'%s'" "$value"
 }

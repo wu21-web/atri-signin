@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -euo pipefail
 
@@ -80,11 +80,12 @@ cleanup() {
 trap cleanup EXIT
 
 mkdir -p "$fixture_dir" "$stub_dir"
+ln -s "$(command -v bash)" "$stub_dir/bash"
 printf 'test@example.invalid,unused\n' >"$accounts"
 printf '%s\n' '# keep me' '0 4 * * * /usr/bin/true' >"$crontab_file"
 
 cat >"$stub_dir/crontab" <<'SH'
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 case ${1:-} in
   -l | --list)
