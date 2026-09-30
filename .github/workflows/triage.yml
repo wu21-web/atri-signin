@@ -6,6 +6,12 @@ on:
       - opened
       - synchronize
       - auto_merge_enabled
+  workflow_dispatch:
+    inputs:
+      pr-num:
+        type: number
+        required: true
+        description: PR number to approve
 
 permissions:
   contents: write
@@ -13,7 +19,7 @@ permissions:
 
 jobs:
   triage:
-    if: (github.event.pull_request.head.repo.full_name == github.repository) && (github.event.pull_request.user.login == 'wu21-web' || github.event.pull_request.user.login == 'dependabot[bot]')
+    if: (github.event.pull_request.head.repo.full_name == github.repository) && (github.event.pull_request.user.login == 'wu21-web' || github.event.pull_request.user.login == 'dependabot[bot]') && (github.event_name == 'pull_request_target' )
     runs-on: ubuntu-latest
     steps:
       - name: Approve PR
@@ -33,3 +39,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr merge ${{ github.event.pull_request.number }} --auto --rebase --repo ${{ github.repository }}
+
+  dispatch:
+    if: github.event_name == 'workflow_dispatch' && github.actor == 'wu21-web'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Approve PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr review ${{ inputs.pr-num }} --approve --repo ${{ github.repository }}
