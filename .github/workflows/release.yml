@@ -5,18 +5,17 @@ on:
     tags:
       - "v*"
 
-permissions:
-  contents: write
-  id-token: write
-  attestations: write
-  artifact-metadata: write
-
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   build:
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+      artifact-metadata: write
     name: Build
     runs-on: ubuntu-latest
     strategy:
@@ -69,10 +68,11 @@ jobs:
           retention-days: 3
 
   publish:
-    if: false # Note that I disabled the publish job for now. I'd rather publish release notes by myself.
     name: Publish
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/download-artifact@v8
         with:
@@ -84,7 +84,7 @@ jobs:
           cd release-assets
           sha256sum atri-signin-* > SHA256SUMS
 
-      - name: Publish release
+      - name: Upload assets
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
@@ -92,6 +92,4 @@ jobs:
           tag="${GITHUB_REF_NAME}"
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" release-assets/* --clobber
-          else
-            gh release create "$tag" release-assets/* --title "$tag" --generate-notes --verify-tag
           fi
