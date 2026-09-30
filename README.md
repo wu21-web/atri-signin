@@ -62,6 +62,37 @@ The command is one-shot. Run it daily with cron, launchd, or another scheduler. 
 17 9 * * * cd /path/to/atri-signin && ./atri-signin >> signin.log 2>&1
 ```
 
+### Linux crontab
+
+Use [`examples/integrations/crontab-job.sh`](examples/integrations/crontab-job.sh). Put `atri-signin` on `PATH`, or pass `--executable`. For example, from the repository root:
+
+```sh
+./examples/integrations/crontab-job.sh --accounts ~/atri-signin/accounts.csv
+
+# A downloaded release can keep its original filename.
+./examples/integrations/crontab-job.sh --accounts ./accounts.csv --executable ./atri-signin-linux-amd64
+```
+
+Omit `--accounts` or `--at` to answer the prompts; the time prompt defaults to `09:17 AM` and accepts `HH:MM` or `H:MM AM/PM` in the system timezone. Relative paths are resolved from the directory you run the script in, so keep the executable and CSV where they are or rerun with `--force` after moving them.
+
+The entry is written between `# BEGIN atri-signin: atri-signin` and `# END atri-signin: atri-signin` markers, so unrelated crontab lines are preserved. Use `--label` for another name, `--dry-run` to print the resulting crontab without installing it, or `--force` to replace an existing entry. Optional `--results`, `--max-signin-count`, `--atri-host`, and `--log-dir` configure the corresponding CLI flags and the log file, which defaults to `~/.local/state/atri-signin/atri-signin.log`. Protect the CSV as it contains account passwords; the crontab stores only its path.
+
+Cron runs the entry as the current user while the machine is on and the cron daemon is running, in the system timezone. Unlike Task Scheduler and launchd it does not run starts that were missed while the machine was off or asleep, and a new run starts even if the previous one is still going. Standard output and errors are appended to the log file, so cron does not mail them. Installing the entry does not run sign-in immediately; the first run is the next occurrence of the chosen time.
+
+To remove the entry, run [`examples/integrations/remove-crontab-job.sh`](examples/integrations/remove-crontab-job.sh):
+
+```sh
+./examples/integrations/remove-crontab-job.sh --dry-run # Preview removal of atri-signin.
+./examples/integrations/remove-crontab-job.sh # Remove it.
+
+# Use the same custom label supplied to crontab-job.sh.
+./examples/integrations/remove-crontab-job.sh --label atri-signin-personal
+```
+
+Removal deletes only the marked block, keeps every other crontab line, and treats an already-absent entry as success, so it can be repeated. The executable, accounts CSV, results, and logs are retained.
+
+To test the integration without touching your crontab, run `./tests/linux-scheduling.sh`. It uses a stub `crontab` command in a temporary directory, builds a harmless argument-capture executable, and verifies the generated schedule, quoting, replacement, and removal. It does not sign in or make requests to Atri Shop.
+
 ### Windows Task Scheduler
 
 Use [`examples/integrations/cron-job.ps1`](examples/integrations/cron-job.ps1) with Windows PowerShell 5.1 or PowerShell 7. Put `atri-signin.exe` on `PATH` (the name `atrisign.exe` is also accepted), or supply `-ExecutablePath`. For example, from the repository root:
