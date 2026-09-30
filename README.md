@@ -125,7 +125,16 @@ Manage the job with `launchctl`:
 ```sh
 launchctl print gui/$UID/work.atrishop.atri-signin
 launchctl kickstart -k gui/$UID/work.atrishop.atri-signin # Run sign-in now.
-
-launchctl bootout gui/$UID/work.atrishop.atri-signin
-rm ~/Library/LaunchAgents/work.atrishop.atri-signin.plist # Uninstall.
 ```
+
+To remove the schedule, run [`examples/integrations/remove-launchd-job.sh`](examples/integrations/remove-launchd-job.sh):
+
+```sh
+./examples/integrations/remove-launchd-job.sh --dry-run # Preview removal of work.atrishop.atri-signin.
+./examples/integrations/remove-launchd-job.sh # Unload the job and delete the plist.
+
+# Use the same custom label supplied to launchd-job.sh when installing the job.
+./examples/integrations/remove-launchd-job.sh --label work.atrishop.atri-signin-personal
+```
+
+The removal script unloads the job with `launchctl bootout` and deletes its plist. A job that is already gone is reported and treated as success, so removal can be repeated, and it works even if the executable or CSV has been moved or deleted. Future scheduled starts are cancelled; a sign-in that is already running can finish. The executable, accounts CSV, results, and logs are retained.

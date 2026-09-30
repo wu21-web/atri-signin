@@ -17,7 +17,10 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Lint shell scripts
-        run: shellcheck examples/integrations/launchd-job.sh tests/macos-scheduling.sh
+        run: |
+          shellcheck examples/integrations/launchd-job.sh \
+            examples/integrations/remove-launchd-job.sh \
+            tests/macos-scheduling.sh
 
   test:
     runs-on: macos-latest

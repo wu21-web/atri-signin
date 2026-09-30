@@ -4,6 +4,7 @@ set -euo pipefail
 
 repository_root=$(cd "$(dirname "$0")/.." && pwd)
 installer=$repository_root/examples/integrations/launchd-job.sh
+remover=$repository_root/examples/integrations/remove-launchd-job.sh
 test_root=$(cd "$(mktemp -d "${TMPDIR:-/tmp}/atri-signin-macos.XXXXXX")" && pwd)
 fixture_dir=$test_root/fixture
 accounts=$test_root/accounts.csv
@@ -11,6 +12,7 @@ plist_dir=$test_root/LaunchAgents
 label=work.atrishop.atri-signin.test
 launch_agents=$HOME/Library/LaunchAgents
 plist=$launch_agents/$label.plist
+unrelated=$launch_agents/atri-signin-unrelated-test.plist
 assertions=0
 original_path=$PATH
 
@@ -42,6 +44,10 @@ run_installer_live() {
   "$installer" --accounts "$accounts" --log-dir "$test_root/logs" --label "$label" "$@"
 }
 
+run_remover() {
+  "$remover" "$@"
+}
+
 expect_failure() {
   local runner=$1 pattern=$2
   shift 2
@@ -70,7 +76,10 @@ plist_arguments() {
 
 cleanup() {
   launchctl bootout "gui/$UID/$label" >/dev/null 2>&1 || true
-  rm -f "$plist"
+  rm -f "$plist" >/dev/null 2>&1 || true
+  if [[ -n ${unrelated:-} ]]; then
+    rm -f "$unrelated" >/dev/null 2>&1 || true
+  fi
   PATH=$original_path
   local temp_parent=${TMPDIR:-/tmp}
   temp_parent=${temp_parent%/}
@@ -206,5 +215,31 @@ if [[ ${ATRI_SIGNIN_TEST_BOOTSTRAP:-} == 1 ]]; then
 else
   printf 'note: skipping the live launchctl run.\n'
 fi
+
+printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>' '<plist version="1.0"><dict><key>Label</key><string>work.atrishop.atri-signin.unrelated.test</string></dict></plist>' >"$unrelated"
+
+run_remover --label "$label" --dry-run >/dev/null
+launchctl print "gui/$UID/$label" >/dev/null || fail '--dry-run unloaded the job.'
+[[ -f $plist ]] || fail '--dry-run removed the plist.'
+assertions=$((assertions + 1))
+
+run_remover --label "$label"
+if launchctl print "gui/$UID/$label" >/dev/null 2>&1; then
+  fail 'The job is still loaded after removal.'
+fi
+if [[ -e $plist ]]; then
+  fail 'The plist was not removed.'
+fi
+[[ -f $accounts ]] || fail 'Removal deleted the accounts CSV.'
+[[ -x $fixture_dir/atri-signin ]] || fail 'Removal deleted the executable.'
+[[ -f "$(dirname "$accounts")/results/args.txt" ]] || fail 'Removal deleted a result file.'
+[[ -f $unrelated ]] || fail 'Removal deleted an unrelated plist.'
+assertions=$((assertions + 5))
+
+output=$(run_remover --label "$label" 2>&1)
+assert_contains 'is not installed' "$output" 'Repeated removal is not a no-op.'
+output=$(run_remover --dry-run 2>&1)
+assert_contains 'work.atrishop.atri-signin' "$output" 'The default label is wrong.'
+expect_failure run_remover 'invalid --label' --label 'work/bad'
 
 printf 'Passed %d assertions.\n' "$assertions"
