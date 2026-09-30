@@ -88,11 +88,18 @@ cat >"$stub_dir/crontab" <<'SH'
 set -euo pipefail
 case ${1:-} in
   -l | --list)
+    if [[ -f $CRONTAB_FILE.error ]]; then
+      printf 'crontab: permission denied\n' >&2
+      exit 1
+    fi
     if [[ ! -f $CRONTAB_FILE ]]; then
       printf 'no crontab for %s\n' "${USER:-user}" >&2
       exit 1
     fi
     cat "$CRONTAB_FILE"
+    if [[ -f $CRONTAB_FILE.mutate ]]; then
+      printf '# concurrent edit\n' >>"$CRONTAB_FILE"
+    fi
     ;;
   -)
     temporary=$(mktemp)
@@ -222,5 +229,31 @@ assertions=$((assertions + 4))
 
 output=$(run_remover 2>&1)
 assert_contains 'is not installed' "$output" 'Repeated removal is not a no-op.'
+
+rm -f "$crontab_file"
+run_installer --force >/dev/null
+assert_contains "# BEGIN atri-signin: $label" "$(cat "$crontab_file")" 'A missing crontab was not created.'
+run_remover >/dev/null
+assert_equal '' "$(cat "$crontab_file")" 'Removal left content in an otherwise empty crontab.'
+
+printf '%s\n' '# keep me' >"$crontab_file"
+touch "$crontab_file.error"
+expect_failure run_installer 'refusing to change it' --force
+expect_failure run_remover 'refusing to change it'
+assert_equal '# keep me' "$(cat "$crontab_file")" 'A failed crontab read changed the crontab.'
+rm -f "$crontab_file.error"
+
+touch "$crontab_file.mutate"
+expect_failure run_installer 'changed while this script was running' --force
+if grep -Fq "# BEGIN atri-signin: $label" "$crontab_file"; then
+  fail 'The installer wrote after detecting a concurrent edit.'
+fi
+assert_contains '# concurrent edit' "$(cat "$crontab_file")" 'A concurrent crontab edit was lost.'
+rm -f "$crontab_file.mutate"
+
+if [[ -d ${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/atri-signin-crontab.lock ]]; then
+  fail 'The crontab lock directory was left behind.'
+fi
+assertions=$((assertions + 1))
 
 printf 'Passed %d assertions.\n' "$assertions"
