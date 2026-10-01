@@ -34,7 +34,7 @@ jobs:
       - name: Build
         if: ${{ env.MANUAL_CHECKOUT == 'true' }}
         run: |
-          go build -o atri-signin ./cmd/atri-signin/ -ldflags '-X github.com/wu21-web/atri-signin/internal/version.Version=${{ env.TAG_VERSION }}'
+          go build -o atri-signin -ldflags "-X github.com/wu21-web/atri-signin/internal/version.Version=${{ env.TAG_VERSION }}" ./cmd/atri-signin/
           ./atri-signin --version
 
       - name: Store Pass
