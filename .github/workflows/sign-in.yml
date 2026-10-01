@@ -9,7 +9,7 @@ permissions:
 
 env:
   MANUAL_CHECKOUT: true
-  TAG_VERSION: "v0.4.0"
+  TAG_VERSION: "v0.4.1"
 
 jobs:
   checkin:
